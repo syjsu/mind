@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>魔法编程-思维导图</title>
+    <title>思维导图</title>
 
     <link href="./js/images/favicon.ico" type="image/x-icon" rel="shortcut icon">
 
@@ -54,7 +54,26 @@ function exportFile() {
     var blob = new Blob([content], {
         type: "text/plain;charset=utf-8"
     });
-    saveAs(blob, "思维导图.mindset");
+    saveAs(blob, "思维导图.km");
+}
+
+
+//保存长截图图片
+function exportImg() {
+    editor.minder.exportData('png').then(function (content) {
+            //截图Base64代码
+            var bytes=window.atob(content.split(',')[1]);
+            var ab = new ArrayBuffer(bytes.length);
+            var ia = new Uint8Array(ab);
+            for (var i = 0; i < bytes.length; i++) {
+                ia[i] = bytes.charCodeAt(i);
+            }
+            var blob = new Blob([ab], {
+                    type: "image/png"
+            });
+            //保存图片
+            saveAs(blob, "思维导图.png");
+    });
 }
 
 function importFile() {
@@ -69,13 +88,19 @@ function clickFile() {
                 editor.minder.importJson(JSON.parse(this.result));
             }
         }
+
+
+
+
+
 </script>
 
 <body ng-app="kityminderDemo" ng-controller="MainController">
-    <h1 class="editor-title">魔法编程 思维导图工具 &nbsp;&nbsp;
-	<input type="file" id="files" style="display: none" onchange="clickFile();" accept=".mindset">
+    <h1 class="editor-title">思维导图 &nbsp;&nbsp;
+	<input type="file" id="files" style="display: none" onchange="clickFile();" accept=".km">
 	<button onclick="importFile()" style="background: transparent;border:none;">打开文件</button>
     	<button onclick="exportFile()" style="background: transparent;border:none;">保存文件</button>
+            <button onclick="exportImg()" style="background: transparent;border:none;">导出图片</button>
     </h1>
     <kityminder-editor on-init="initEditor(editor, minder)"></kityminder-editor>
 </body>
@@ -108,14 +133,25 @@ function clickFile() {
 <script>
 angular.module('kityminderDemo', ['kityminderEditor'])
     .config(function(configProvider) {
-        configProvider.set('imageUpload', 'http://naotu.baidu.com/bos/upload_image');
+        //configProvider.set('imageUpload', '../server/imageUpload.php');
     })
     .controller('MainController', function($scope) {
         $scope.initEditor = function(editor, minder) {
             window.editor = editor;
             window.minder = minder;
+
+            //缓存文件
+            if(localStorage.getItem("filedata")){
+                    editor.minder.importJson(JSON.parse(localStorage.getItem("filedata")));
+            }
+            editor.minder.on('contentchange', function() {
+                var content = editor.minder.exportJson();
+                localStorage.setItem("filedata",JSON.stringify(content, null, 2));
+            });
+
         };
     });
+
 </script>
 
 </html>
